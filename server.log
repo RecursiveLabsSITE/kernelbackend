@@ -2,11 +2,24 @@
 > kernel-studio@0.1.0 dev
 > next dev --turbopack
 
+ ⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
    ▲ Next.js 15.5.6 (Turbopack)
-   - Local:        http://localhost:3000
-   - Network:      http://169.254.0.21:3000
+   - Local:        http://localhost:3001
+   - Network:      http://169.254.0.21:3001
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1690ms
-[?25h
+ ✓ Ready in 2.1s
+ ○ Compiling /api/kernels ...
+ ✓ Compiled /api/kernels in 4.6s
+GET /api/kernels - Starting request
+Environment: {
+  DATABASE_URL: 'NOT SET',
+  DATABASE_URL_UNPOOLED: 'NOT SET',
+  PGHOST: 'localhost',
+  PGPORT: '5432',
+  PGDATABASE: 'kernel_studio'
+}
+Connecting to database with URL: postgresql://sandbox:ujeQ4ybCX1853L1o1foCel3l@loca...
+Query successful, returning 2 rows
+ GET /api/kernels 200 in 5265ms

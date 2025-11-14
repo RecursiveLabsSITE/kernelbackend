@@ -9,7 +9,16 @@ function getPool(): Pool {
       process.env.DATABASE_URL || 
       `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'postgres'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE || 'kernel_studio'}`
     
-    console.log('Connecting to database with URL:', connectionString.substring(0, 50) + '...')
+    console.log('Database connection info:', {
+      hasUnpooled: !!process.env.DATABASE_URL_UNPOOLED,
+      hasPooled: !!process.env.DATABASE_URL,
+      hasPGUSER: !!process.env.PGUSER,
+      hasPGPASSWORD: !!process.env.PGPASSWORD,
+      hasPGHOST: !!process.env.PGHOST,
+      hasPGPORT: !!process.env.PGPORT,
+      hasPGDATABASE: !!process.env.PGDATABASE,
+      connectionStringStart: connectionString.substring(0, 50) + '...'
+    })
     
     pool = new Pool({
       connectionString,
