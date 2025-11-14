@@ -3,11 +3,26 @@ import { query } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('GET /api/kernels - Starting request')
+    console.log('Environment:', {
+      DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+      DATABASE_URL_UNPOOLED: process.env.DATABASE_URL_UNPOOLED ? 'SET' : 'NOT SET',
+      PGHOST: process.env.PGHOST,
+      PGPORT: process.env.PGPORT,
+      PGDATABASE: process.env.PGDATABASE,
+    })
+    
     const result = await query('SELECT * FROM kernels ORDER BY created_at DESC LIMIT 50')
+    console.log('Query successful, returning', result.rows.length, 'rows')
     return NextResponse.json(result.rows)
   } catch (error) {
     console.error('Error fetching kernels:', error)
-    return NextResponse.json({ error: 'Failed to fetch kernels' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ 
+      error: 'Failed to fetch kernels',
+      details: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined
+    }, { status: 500 })
   }
 }
 
