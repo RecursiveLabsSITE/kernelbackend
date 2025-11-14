@@ -23,3 +23,5 @@ Environment: {
 Connecting to database with URL: postgresql://sandbox:ujeQ4ybCX1853L1o1foCel3l@loca...
 Query successful, returning 2 rows
  GET /api/kernels 200 in 5265ms
+ ✓ Compiled /api/health in 462ms
+ GET /api/health 200 in 885ms
