@@ -25,3 +25,8 @@ Query successful, returning 2 rows
  GET /api/kernels 200 in 5265ms
  ✓ Compiled /api/health in 462ms
  GET /api/health 200 in 885ms
+ ✓ Compiled /api/debug in 478ms
+ GET /api/debug 200 in 863ms
+ ○ Compiling /api/test-db ...
+ ✓ Compiled /api/test-db in 761ms
+ GET /api/test-db 500 in 1474ms
