@@ -11,11 +11,15 @@ interface Kernel {
   created_at: string
 }
 
+// Default team ID (UUID v4)
+const DEFAULT_TEAM_ID = '550e8400-e29b-41d4-a716-446655440001'
+
 export default function KernelsPage() {
   const [kernels, setKernels] = useState<Kernel[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newKernel, setNewKernel] = useState({ name: '', description: '' })
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadKernels()
@@ -23,13 +27,18 @@ export default function KernelsPage() {
 
   async function loadKernels() {
     try {
+      setError(null)
       const res = await fetch('/api/kernels')
       if (res.ok) {
         const data = await res.json()
         setKernels(data)
+      } else {
+        const errorData = await res.json()
+        setError(`Failed to load kernels: ${errorData.error || 'Unknown error'}`)
       }
     } catch (err) {
-      console.error(err)
+      console.error('Error loading kernels:', err)
+      setError(`Error loading kernels: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setLoading(false)
     }
@@ -42,13 +51,14 @@ export default function KernelsPage() {
     }
 
     try {
+      setError(null)
       const res = await fetch('/api/kernels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newKernel.name,
           description: newKernel.description,
-          team_id: 'default-team',
+          team_id: DEFAULT_TEAM_ID,
         }),
       })
 
@@ -57,10 +67,14 @@ export default function KernelsPage() {
         setKernels([...kernels, created])
         setNewKernel({ name: '', description: '' })
         setShowCreateForm(false)
+      } else {
+        const errorData = await res.json()
+        setError(`Failed to create kernel: ${errorData.error || 'Unknown error'}`)
+        console.error('Error response:', errorData)
       }
     } catch (err) {
-      console.error(err)
-      alert('Failed to create kernel')
+      console.error('Error creating kernel:', err)
+      setError(`Error creating kernel: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 
@@ -86,6 +100,12 @@ export default function KernelsPage() {
           {showCreateForm ? 'Cancel' : '+ Create Kernel'}
         </button>
       </div>
+
+      {error && (
+        <div style={{ background: '#fee2e2', borderRadius: '8px', padding: '16px', marginBottom: '24px', border: '1px solid #fecaca', color: '#991b1b' }}>
+          <p style={{ margin: 0, fontSize: '14px' }}>{error}</p>
+        </div>
+      )}
 
       {showCreateForm && (
         <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', marginBottom: '24px', border: '1px solid #e5e7eb' }}>
