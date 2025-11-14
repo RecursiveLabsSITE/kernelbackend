@@ -10,19 +10,30 @@ interface Message {
   kernelName?: string;
 }
 
+interface Kernel {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [selectedKernel, setSelectedKernel] = useState('marcus-aurelius');
-  const [kernels, setKernels] = useState<any[]>([]);
+  const [selectedKernel, setSelectedKernel] = useState<string | null>(null);
+  const [kernels, setKernels] = useState<Kernel[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch kernels on mount
   useEffect(() => {
     const fetchKernels = async () => {
       try {
+        setError(null);
         const res = await fetch('/api/kernels');
+        if (!res.ok) {
+          throw new Error(`Failed to fetch kernels: ${res.status}`);
+        }
         const data = await res.json();
         setKernels(data);
         if (data.length > 0) {
@@ -30,6 +41,7 @@ export default function ChatPage() {
         }
       } catch (error) {
         console.error('Failed to fetch kernels:', error);
+        setError(`Failed to load kernels: ${error instanceof Error ? error.message : String(error)}`);
       }
     };
     fetchKernels();
@@ -42,7 +54,7 @@ export default function ChatPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !selectedKernel) return;
 
     // Add user message
     const userMessage: Message = {
@@ -64,15 +76,15 @@ export default function ChatPage() {
       // Simulate delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Generate contextual response based on kernel
+      // Generate contextual response based on kernel name
       const responses: { [key: string]: string[] } = {
-        'marcus-aurelius': [
+        'Marcus Aurelius': [
           'The obstacle is the way. What troubles you is merely an opportunity to practice virtue.',
           'You must distinguish between what is in your control and what is not. Focus your energy wisely.',
           'Remember, you are but a small part of a greater whole. Act with wisdom and compassion.',
           'The mind adapts and converts to its own purposes any obstacle to its action.',
         ],
-        'cleopatra-vii': [
+        'Cleopatra VII': [
           'Power is not merely held—it is wielded with intelligence and grace.',
           'A ruler must understand both the hearts of her people and the minds of her enemies.',
           'Diplomacy and strategy are the true weapons of a sovereign.',
@@ -80,7 +92,7 @@ export default function ChatPage() {
         ],
       };
 
-      const kernelResponses = responses[selectedKernel] || responses['marcus-aurelius'];
+      const kernelResponses = responses[kernelName] || responses['Marcus Aurelius'];
       const response = kernelResponses[Math.floor(Math.random() * kernelResponses.length)];
 
       const kernelMessage: Message = {
@@ -94,6 +106,7 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, kernelMessage]);
     } catch (error) {
       console.error('Failed to send message:', error);
+      setError(`Failed to send message: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setLoading(false);
     }
@@ -141,41 +154,45 @@ export default function ChatPage() {
             <p style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', marginBottom: '8px', textTransform: 'uppercase' }}>
               Select Kernel
             </p>
-            {kernels.map((kernel) => (
-              <button
-                key={kernel.id}
-                onClick={() => {
-                  setSelectedKernel(kernel.id);
-                  setMessages([]);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  marginBottom: '8px',
-                  backgroundColor: selectedKernel === kernel.id ? '#e0e7ff' : '#fff',
-                  border: selectedKernel === kernel.id ? '1px solid #6366f1' : '1px solid #e5e7eb',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  fontWeight: selectedKernel === kernel.id ? '600' : '500',
-                  color: selectedKernel === kernel.id ? '#4f46e5' : '#111827',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s',
-                }}
-                onMouseOver={(e) => {
-                  if (selectedKernel !== kernel.id) {
-                    e.currentTarget.style.backgroundColor = '#f3f4f6';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (selectedKernel !== kernel.id) {
-                    e.currentTarget.style.backgroundColor = '#fff';
-                  }
-                }}
-              >
-                {kernel.name}
-              </button>
-            ))}
+            {kernels.length === 0 ? (
+              <p style={{ fontSize: '14px', color: '#9ca3af' }}>No kernels available</p>
+            ) : (
+              kernels.map((kernel) => (
+                <button
+                  key={kernel.id}
+                  onClick={() => {
+                    setSelectedKernel(kernel.id);
+                    setMessages([]);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    marginBottom: '8px',
+                    backgroundColor: selectedKernel === kernel.id ? '#e0e7ff' : '#fff',
+                    border: selectedKernel === kernel.id ? '1px solid #6366f1' : '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontWeight: selectedKernel === kernel.id ? '600' : '500',
+                    color: selectedKernel === kernel.id ? '#4f46e5' : '#111827',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => {
+                    if (selectedKernel !== kernel.id) {
+                      e.currentTarget.style.backgroundColor = '#f3f4f6';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (selectedKernel !== kernel.id) {
+                      e.currentTarget.style.backgroundColor = '#fff';
+                    }
+                  }}
+                >
+                  {kernel.name}
+                </button>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -197,6 +214,13 @@ export default function ChatPage() {
             {kernels.find((k) => k.id === selectedKernel)?.description || 'Start a conversation'}
           </p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div style={{ padding: '16px', backgroundColor: '#fee2e2', borderBottom: '1px solid #fecaca', color: '#991b1b' }}>
+            <p style={{ margin: 0, fontSize: '14px' }}>{error}</p>
+          </div>
+        )}
 
         {/* Messages */}
         <div
@@ -315,7 +339,7 @@ export default function ChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message..."
-              disabled={loading}
+              disabled={loading || !selectedKernel}
               style={{
                 flex: 1,
                 padding: '12px 16px',
@@ -331,25 +355,25 @@ export default function ChatPage() {
             />
             <button
               type="submit"
-              disabled={loading || !input.trim()}
+              disabled={loading || !input.trim() || !selectedKernel}
               style={{
                 padding: '12px 24px',
-                backgroundColor: loading || !input.trim() ? '#d1d5db' : '#4f46e5',
+                backgroundColor: loading || !input.trim() || !selectedKernel ? '#d1d5db' : '#4f46e5',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '14px',
                 fontWeight: '600',
-                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                cursor: loading || !input.trim() || !selectedKernel ? 'not-allowed' : 'pointer',
                 transition: 'background-color 0.2s',
               }}
               onMouseOver={(e) => {
-                if (!loading && input.trim()) {
+                if (!loading && input.trim() && selectedKernel) {
                   e.currentTarget.style.backgroundColor = '#4338ca';
                 }
               }}
               onMouseOut={(e) => {
-                if (!loading && input.trim()) {
+                if (!loading && input.trim() && selectedKernel) {
                   e.currentTarget.style.backgroundColor = '#4f46e5';
                 }
               }}
