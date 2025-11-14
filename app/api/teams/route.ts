@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Pool } from 'pg'
 
 const pool = new Pool({
-  host: 'localhost',
-  port: 5432,
-  database: 'kernel_studio',
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
+  host: process.env.PGHOST || 'localhost',
+  port: parseInt(process.env.PGPORT || '5432'),
+  database: process.env.PGDATABASE || 'kernel_studio',
+  user: process.env.PGUSER || 'postgres',
+  password: process.env.PGPASSWORD || 'postgres',
 })
 
 export async function GET(request: NextRequest) {
