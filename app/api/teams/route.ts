@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Pool } from 'pg'
-
-const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
-  port: parseInt(process.env.PGPORT || '5432'),
-  database: process.env.PGDATABASE || 'kernel_studio',
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'postgres',
-})
+import { query } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
-    const result = await pool.query('SELECT * FROM teams LIMIT 10')
+    const result = await query('SELECT * FROM teams LIMIT 10')
     return NextResponse.json(result.rows)
   } catch (error) {
     console.error('Error fetching teams:', error)
